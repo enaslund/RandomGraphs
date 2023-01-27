@@ -10,11 +10,11 @@ def random_cover(*, base_graph, cover_deg, permutation_func, identity_shift):
     Args:
         base_graph (np.array or csr_matrix): The adjacency matrix of the base graph.
             This must be a symmetric square matrix.
-        degree (int): The degree of the cover.
+        cover_deg (int): The degree of the cover.
         permutation_func (int -> np.array): The function used to generate permutations
             of {1,...,degree}. Must take in an int, and output an array of that length.
             E.g. Use np.random.permutation for the general case of the symmetric group.
-        identity_shift: Shift the resulting adjacency matrix by x*I for some real number
+        identity_shift (float): Shift the resulting adjacency matrix by x*I for some
             x, where I is the identity matrix. This helps when computing the most
             negative or the most positive eigenvalues of graphs that where these are
             similar in magnitude.
@@ -68,14 +68,38 @@ def random_cover(*, base_graph, cover_deg, permutation_func, identity_shift):
     return csr_matrix((data, (row_ind, col_ind)), shape=(n, n))
 
 
-def random_graph(*, deg, size, identity_shift=0):
+def random_graph(*, deg, size, identity_shift=0, simple=False):
+    """Generates a random graph from the loop. To make simple
+    graphs the algorithm is inefficient and tries randomly until it succeeds.
+    A different implementation is required for higher degree.
 
+    Args:
+        deg (int): The degree of the graph. Must be even since we are taking covers
+            of the loop.
+        size (int): The number of vertices of the output graph.
+        identity_shift (float): Shift the resulting adjacency matrix by x*I for some
+            real number x, where I is the identity matrix. This helps when computing the
+            most negative or positive eigenvalues of graphs that where these are
+            similar in magnitude.
+        simple (boolean): Whether the output should be a simple graph.
+
+    Returns:
+        scipy.sparse.csr_matrix: A sparse square adjacencymatrix of size size
+    """
     if deg % 2 != 0:
         raise ValueError("2 must divid degree since we are taking covers of the loop")
     base_graph = np.array([np.array[deg]])
-    return random_cover(
-        base_graph=base_graph,
-        cover_deg=size,
-        permutation_func=random_derangement,
-        identity_shift=identity_shift,
-    )
+
+    output_is_not_simple = True
+    while simple and (output_is_not_simple):
+        output_graph = random_cover(
+            base_graph=base_graph,
+            cover_deg=size,
+            permutation_func=random_derangement,  # Derangements remove self loops
+            identity_shift=identity_shift,
+        )
+
+        if np.max(output_graph) == 1:
+            output_is_not_simple = False
+
+    return output_graph
