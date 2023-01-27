@@ -22,8 +22,11 @@ def random_cover(*, base_graph, degree, permutation_func, identity_shift):
         scipy.sparse.csr_matrix: A sparse square matrix of size len(base_graph)*degree.
     """
     n = base_graph.shape[0] * degree
-    row_ind = []  # np.array([]).astype(int)
-    col_ind = []  # np.array([]).astype(int)
+    # Originally row_ind and col_ind were numpy arrays, where we appended in each loop
+    # However for taking covers of extremely large graphs that ran slowly on my machine
+    # and it was significantly faster to store everything in lists and append at the end
+    row_ind = []
+    col_ind = []
 
     # This turns the matrix A into a sparse list of entries
     # For covers of extremely large graphs, this is the slowest step
