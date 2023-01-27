@@ -6,7 +6,7 @@ from .covers import random_cover
 
 
 def generate_new_extremal_eigs(
-    *, base_graph, cover_degree, permutation_func, number, trivial_eig, eig_type
+    *, base_graph, cover_deg, permutation_func, number, trivial_eig, eig_type
 ):
     # We want to find the base eigenvalues that we should ignore.
     # If the base_graph is enormous, we need to be careful and
@@ -49,7 +49,7 @@ def generate_new_extremal_eigs(
     for i in range(0, number):
         B = random_cover(
             base_graph=base_graph,
-            degree=cover_degree,
+            cover_deg=cover_deg,
             permutation_func=permutation_func,
             identity_shift=identity_shift,
         )
