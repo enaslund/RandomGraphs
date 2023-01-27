@@ -2,7 +2,42 @@ import numpy as np
 import scipy
 from scipy.sparse import csr_matrix
 from scipy.sparse import dok_matrix
-from .covers import random_cover
+import covers
+
+
+def generate_loop_extremal_eigs(*, deg, size, number, eig_type, simple):
+    output = []
+
+    if eig_type == "max_positive":
+        id_mult = 1
+    elif eig_type == "max_negative":
+        id_mult = -1
+    elif eig_type == "max_magnitude":
+        id_mult = 0
+    else:
+        raise ValueError(
+            f"size_type '{eig_type}' is invalid. Must be one of "
+            f"'max_positive', 'max_negative', 'max_magnitude' "
+        )
+
+    identity_shift = id_mult * int(deg / 2)
+
+    count = 0
+    while count < number:
+        B = covers.random_graph(
+            deg=deg, size=size, simple=simple, identity_shift=identity_shift
+        )
+
+        shifted_eigs = scipy.sparse.linalg.eigsh(B, k=2, return_eigenvectors=False)
+        eigs = [x - identity_shift for x in shifted_eigs]
+
+        #            print([np.min(abs(base_eigs - eig)) for eig in eigs])
+        eigs = [eig for eig in eigs if abs(eig - deg) > 10 ** (-12)]
+        if len(eigs) > 0:
+            output.append(eigs[0])
+            count += 1
+
+    return output
 
 
 def generate_new_extremal_eigs(
@@ -47,7 +82,7 @@ def generate_new_extremal_eigs(
 
     k = 2
     for i in range(0, number):
-        B = random_cover(
+        B = covers.random_cover(
             base_graph=base_graph,
             cover_deg=cover_deg,
             permutation_func=permutation_func,

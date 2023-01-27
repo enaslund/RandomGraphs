@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse import dok_matrix
-from .permutations import random_derangement
+import random_permutations
 
 
 def random_cover(*, base_graph, cover_deg, permutation_func, identity_shift):
@@ -68,10 +68,9 @@ def random_cover(*, base_graph, cover_deg, permutation_func, identity_shift):
     return csr_matrix((data, (row_ind, col_ind)), shape=(n, n))
 
 
-def random_graph(*, deg, size, identity_shift=0, simple=False):
-    """Generates a random graph from the loop. To make simple
-    graphs the algorithm is inefficient and tries randomly until it succeeds.
-    A different implementation is required for higher degree.
+def random_graph(*, deg, size, identity_shift=0):
+    """Generates a random graph from the loop. Graph will not necessarily be simple,
+    but will have no self-loops.
 
     Args:
         deg (int): The degree of the graph. Must be even since we are taking covers
@@ -81,25 +80,72 @@ def random_graph(*, deg, size, identity_shift=0, simple=False):
             real number x, where I is the identity matrix. This helps when computing the
             most negative or positive eigenvalues of graphs that where these are
             similar in magnitude.
-        simple (boolean): Whether the output should be a simple graph.
 
     Returns:
-        scipy.sparse.csr_matrix: A sparse square adjacencymatrix of size size
+        scipy.sparse.csr_matrix: A sparse square adjacency matrix of size size
     """
     if deg % 2 != 0:
         raise ValueError("2 must divid degree since we are taking covers of the loop")
-    base_graph = np.array([np.array[deg]])
+    base_graph = np.array([np.array([deg])])
 
-    output_is_not_simple = True
-    while simple and (output_is_not_simple):
-        output_graph = random_cover(
-            base_graph=base_graph,
-            cover_deg=size,
-            permutation_func=random_derangement,  # Derangements remove self loops
-            identity_shift=identity_shift,
-        )
-
-        if np.max(output_graph) == 1:
-            output_is_not_simple = False
-
+    output_graph = random_cover(
+        base_graph=base_graph,
+        cover_deg=size,
+        # We use derangements to remove self loops
+        permutation_func=random_permutations.derangement,
+        identity_shift=identity_shift,
+    )
     return output_graph
+
+
+def random_simple_graph(*, deg, size, identity_shift=0):
+    """Generates a random simple graph as a cover of the loop. The permutations used
+    are generated to avoid overlap with any of the previously generated permutations.
+    This occurs in the permutation function simple_avoiding_others
+
+    Args:
+        deg (int): The degree of the graph. Must be even since we are taking covers
+            of the loop.
+        size (int): The number of vertices of the output graph.
+        identity_shift (float): Shift the resulting adjacency matrix by x*I for some
+            real number x, where I is the identity matrix. This helps when computing the
+            most negative or positive eigenvalues of graphs that where these are
+            similar in magnitude.
+
+    Returns:
+        scipy.sparse.csr_matrix: A sparse square adjacency matrix of size size
+    """
+    if deg % 2 != 0:
+        raise ValueError("2 must divid degree since we are taking covers of the loop")
+
+    row_ind = []
+    col_ind = []
+    arange = np.arange(size)
+
+    permutations = []
+    for k in range(0, int(deg / 2)):
+        random_perm = random_permutations.simple_avoiding_others(
+            size, permutations + [np.arange(size)]
+        )
+        permutations.append(random_perm)
+
+    for random_perm in permutations:
+        x_coords = arange
+        y_coords = random_perm
+        row_ind.append(x_coords)
+        col_ind.append(y_coords)
+
+        col_ind.append(x_coords)
+        row_ind.append(y_coords)
+
+    row_ind.append(np.arange(size))
+    col_ind.append(np.arange(size))
+
+    row_ind = np.concatenate(row_ind)
+    col_ind = np.concatenate(col_ind)
+
+    data = np.append(
+        np.ones(size * deg), identity_shift * np.ones(size)
+    )  # .astype(int)
+
+    return csr_matrix((data, (row_ind, col_ind)), shape=(size, size))
