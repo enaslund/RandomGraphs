@@ -22,15 +22,14 @@ def random_cover(*, base_graph, degree, permutation_func, identity_shift):
         scipy.sparse.csr_matrix: A sparse square matrix of size len(base_graph)*degree.
     """
     n = base_graph.shape[0] * degree
-    row_ind = np.array([]).astype(int)
-    col_ind = np.array([]).astype(int)
+    row_ind = []  # np.array([]).astype(int)
+    col_ind = []  # np.array([]).astype(int)
 
     # This turns the matrix A into a sparse list of entries
-    # It is possible for speed reasons this function should take a
-    # dok_matrix as input since the operation of converting to a dok_matrix
-    # will be repeated many times, and for large graphs is a meaningful
-    # fraction of this functions runtime.
-    base_graph = dok_matrix(base_graph)
+    # For covers of extremely large graphs, this is the slowest step
+    if not isinstance(base_graph, dok_matrix):
+        base_graph = dok_matrix(base_graph)
+
     ones = np.ones(degree).astype(int)
     arange = np.arange(degree)
     for (i, j), entry in base_graph.items():
@@ -41,21 +40,23 @@ def random_cover(*, base_graph, degree, permutation_func, identity_shift):
         else:
             entry = int(entry)
 
-        permutations = []
         for k in range(0, entry):
-            permutations.append(permutation_func(degree))
+            random_perm = permutation_func(degree)
 
-        for random_perm in permutations:
             x_coords = degree * i * ones + arange
             y_coords = degree * j * ones + random_perm
-            row_ind = np.append(row_ind, x_coords)
-            col_ind = np.append(col_ind, y_coords)
+            row_ind.append(x_coords)
+            col_ind.append(y_coords)
 
-            col_ind = np.append(col_ind, x_coords)
-            row_ind = np.append(row_ind, y_coords)
+            col_ind.append(x_coords)
+            row_ind.append(y_coords)
 
-    row_ind = np.append(row_ind, np.arange(n))
-    col_ind = np.append(col_ind, np.arange(n))
+    row_ind.append(np.arange(n))
+    col_ind.append(np.arange(n))
+
+    row_ind = np.concatenate(row_ind)
+    col_ind = np.concatenate(col_ind)
+
     data = np.append(
         np.ones(degree * int(sum(base_graph.values()))), identity_shift * np.ones(n)
     )  # .astype(int)
