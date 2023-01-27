@@ -3,6 +3,23 @@ from scipy import stats
 from TracyWidom import TracyWidom
 
 
+def expected_std_scaling(degree, tw_type):
+    """Returns the expected_std, where the std we observe should be
+    multiplied by N**(-2/3) where N is the true 'size' associated with
+    the new eigenvalues."""
+    if tw_type == 1:
+        tw_std = np.sqrt(1.607781034581)
+    elif tw_type == 2:
+        tw_std = np.sqrt(0.8131947928329)
+    elif tw_type == 4:
+        tw_std = np.sqrt(0.5177237207726)
+    else:
+        raise ValueError("tw_type {tw_type} invalid, must be in {1,2,4}")
+
+    extra_factor = ((degree - 2) ** 2 / ((degree - 1) * degree)) ** (2 / 3)
+    return tw_std * np.sqrt(degree - 1) * extra_factor
+
+
 def tracywidom_ks_test(x):
     """For an array x, returns the Kolmogorov-Smirnov-test for x normalized"""
     x = np.array(x)
