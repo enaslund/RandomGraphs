@@ -1,5 +1,5 @@
 import numpy as np
-import scipy
+from scipy.sparse.linalg import eigsh
 from scipy.sparse import csr_matrix
 from scipy.sparse import dok_matrix
 import covers
@@ -33,7 +33,7 @@ def generate_loop_extremal_eigs(*, deg, size, number, eig_type, simple):
     while count < number:
         B = graph_function(size=size, deg=deg, identity_shift=identity_shift)
 
-        shifted_eigs = scipy.sparse.linalg.eigsh(B, k=2, return_eigenvectors=False)
+        shifted_eigs = eigsh(B, k=2, return_eigenvectors=False)
         eigs = [x - identity_shift for x in shifted_eigs]
 
         #            print([np.min(abs(base_eigs - eig)) for eig in eigs])
@@ -61,9 +61,7 @@ def generate_new_extremal_eigs(
         base_graph = csr_matrix(base_graph)
         # If the base graph is very large, we compute the top 100 eigenvalues.
         # This should overestimate the number we need by a lot.
-        base_eigs = scipy.sparse.linalg.eigsh(
-            base_graph, k=100, return_eigenvectors=False
-        )
+        base_eigs = eigsh(base_graph, k=100, return_eigenvectors=False)
 
     # The random_cover function runs much faster if we first turn the base graph
     # into a dok_matrix
@@ -97,7 +95,7 @@ def generate_new_extremal_eigs(
         found_new_eig = False
 
         while found_new_eig is not True:
-            shifted_eigs = scipy.sparse.linalg.eigsh(B, k=k, return_eigenvectors=False)
+            shifted_eigs = eigsh(B, k=k, return_eigenvectors=False)
             eigs = [x - identity_shift for x in shifted_eigs]
 
             #            print([np.min(abs(base_eigs - eig)) for eig in eigs])
