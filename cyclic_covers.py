@@ -8,22 +8,23 @@ import random_permutations
 
 
 if __name__ == "__main__":
-    number = int(sys.argv[1])
-    base_size = int(sys.argv[2])
-    cover_deg = int(sys.argv[3])
-    filename = sys.argv[4]
+    number_outer = int(sys.argv[1])
+    number_inner = int(sys.argv[2])
+    base_size = int(sys.argv[3])
+    cover_deg = int(sys.argv[4])
+    filename = sys.argv[5]
 
     start = time.time()
     results = []
 
-    if len(sys.argv) > 5:
-        cpu_count = int(sys.argv[5])
+    if len(sys.argv) > 6:
+        cpu_count = int(sys.argv[6])
     else:
         cpu_count = multiprocessing.cpu_count()
     print(f"CPU Count: {cpu_count}")
     pool = multiprocessing.Pool(cpu_count)
 
-    for i in range(0, number):
+    for i in range(0, number_inner):
         base_graph = covers.random_simple_graph(size=base_size, deg=4)
         result = pool.apply_async(
             eigenvalues.generate_new_extremal_eigs,
@@ -31,7 +32,7 @@ if __name__ == "__main__":
                 "base_graph": base_graph,
                 "cover_deg": cover_deg,
                 "permutation_func": random_permutations.abelian_cycle,
-                "number": 1,
+                "number": number_outer,
                 "trivial_eig": 4,
                 "eig_type": "max_positive",
             },
