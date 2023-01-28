@@ -16,7 +16,10 @@ if __name__ == "__main__":
     start = time.time()
     results = []
 
-    cpu_count = multiprocessing.cpu_count()
+    if len(sys.argv) > 5:
+        cpu_count = int(sys.argv[5])
+    else:
+        cpu_count = multiprocessing.cpu_count()
     print(f"CPU Count: {cpu_count}")
     pool = multiprocessing.Pool(cpu_count)
 
