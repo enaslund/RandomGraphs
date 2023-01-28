@@ -85,7 +85,7 @@ def random_graph(*, deg, size, identity_shift=0):
         scipy.sparse.csr_matrix: A sparse square adjacency matrix of size size
     """
     if deg % 2 != 0:
-        raise ValueError("2 must divid degree since we are taking covers of the loop")
+        raise ValueError("2 must divide degree since we are taking covers of the loop")
     base_graph = np.array([np.array([deg])])
 
     output_graph = random_cover(

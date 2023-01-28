@@ -22,11 +22,16 @@ def generate_loop_extremal_eigs(*, deg, size, number, eig_type, simple):
 
     identity_shift = id_mult * int(deg / 2)
 
+    if simple:
+        graph_function = covers.random_simple_graph
+    else:
+        graph_function = covers.random_graph
+
+    # With small probability, the graph will be disconnected, and return the
+    # value 4 twice.
     count = 0
     while count < number:
-        B = covers.random_graph(
-            deg=deg, size=size, simple=simple, identity_shift=identity_shift
-        )
+        B = graph_function(size=size, deg=deg, identity_shift=identity_shift)
 
         shifted_eigs = scipy.sparse.linalg.eigsh(B, k=2, return_eigenvectors=False)
         eigs = [x - identity_shift for x in shifted_eigs]
@@ -51,7 +56,7 @@ def generate_new_extremal_eigs(
             dense_base_graph = base_graph.todense()
         else:
             dense_base_graph = base_graph
-        base_eigs = np.linalg.eigsh(dense_base_graph)[0]
+        base_eigs = np.linalg.eigh(dense_base_graph)[0]
     else:
         base_graph = csr_matrix(base_graph)
         # If the base graph is very large, we compute the top 100 eigenvalues.
