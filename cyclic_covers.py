@@ -11,7 +11,7 @@ if __name__ == "__main__":
     number = int(sys.argv[1])
     base_size = int(sys.argv[2])
     cover_deg = int(sys.argv[3])
-    filename = int(sys.argv[4])
+    filename = sys.argv[4]
 
     start = time.time()
     results = []
