@@ -51,7 +51,7 @@ def generate_new_extremal_eigs(
     # We want to find the base eigenvalues that we should ignore.
     # If the base_graph is enormous, we need to be careful and
     # compute a smaller number of eigenvalues using a sparse routine.
-    if base_graph.shape[0] < 500:
+    if base_graph.shape[0] < 1000:
         if not isinstance(base_graph, np.matrix):
             dense_base_graph = base_graph.todense()
         else:
@@ -59,9 +59,10 @@ def generate_new_extremal_eigs(
         base_eigs = np.linalg.eigh(dense_base_graph)[0]
     else:
         base_graph = csr_matrix(base_graph)
-        # If the base graph is very large, we compute the top 100 eigenvalues.
-        # This should overestimate the number we need by a lot.
-        base_eigs = eigsh(base_graph, k=50, return_eigenvectors=False)
+        # If the base graph is very large, we compute the top 20 eigenvalues.
+        # This should overestimate the number we need. Convergence to
+        # TW has std ~C*n**(-2/3), while 20/n eigs has std ~C*n**(-1/2)
+        base_eigs = eigsh(base_graph, k=20, return_eigenvectors=False)
 
     # The following will be need to make sure that the new eigenvalue generated
     # is indeed new. Only relevant when not all the base eigs are calculated.
@@ -117,6 +118,9 @@ def generate_new_extremal_eigs(
                 output.append(sorted(eigs, key=lambda x: abs(x))[-1])
                 found_new_eig = True
 
+                # One way a new eigenvalue could fail to be new, is that it is
+                # a base graph eigenvalue, but is not in the list of eigenvalues
+                # we calculated because we chose k too small.
                 # The following code checks that we can guarantee that the new
                 # eigenvalue is new. The entire function will break if we cannot do
                 # this, as that indicates a fatal error by the author,
