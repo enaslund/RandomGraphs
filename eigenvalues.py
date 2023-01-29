@@ -92,7 +92,7 @@ def generate_new_extremal_eigs(
 
     k = 2
 
-    min_dist = 0
+    min_dist = 50
 
     for i in range(0, number):
         B = covers.random_cover(
