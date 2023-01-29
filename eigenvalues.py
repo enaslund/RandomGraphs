@@ -91,6 +91,9 @@ def generate_new_extremal_eigs(
     identity_shift = id_mult * int(trivial_eig / 2)
 
     k = 2
+
+    min_dist = 0
+
     for i in range(0, number):
         B = covers.random_cover(
             base_graph=base_graph,
@@ -126,6 +129,10 @@ def generate_new_extremal_eigs(
                 # this, as that indicates a fatal error by the author,
                 # as then the program is not computing what was intended.
                 if eig_type == "max_positive":
+
+                    if min_dist > np.max(eigs) - base_eig_smallest_pos:
+                        min_dist = np.max(eigs) - base_eig_smallest_pos
+
                     if np.max(eigs) < base_eig_smallest_pos:
                         raise ValueError(
                             f"Largest New Eigenvalue {np.max(eigs)} smaller than "
@@ -143,4 +150,5 @@ def generate_new_extremal_eigs(
                             f"Largest magnitude new Eigenvalue {np.min(eigs)} smaller "
                             f" than smallest base eig {base_eig_smallest_abs}"
                         )
+    print(min_dist)
     return output
