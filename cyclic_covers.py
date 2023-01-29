@@ -20,6 +20,8 @@ cover_deg = int(sys.argv[4])
 
 
 def async_func():
+    # Critical line of code so the results of multiprocessing are
+    # all identical
     np.random.seed((os.getpid() * int(time.time())) % 123456789)
 
     base_graph = covers.random_simple_graph(size=base_size, deg=4)

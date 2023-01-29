@@ -58,30 +58,37 @@ def generate_new_extremal_eigs(
             dense_base_graph = base_graph
         base_eigs = np.linalg.eigh(dense_base_graph)[0]
     else:
-        base_graph = csr_matrix(base_graph)
-        # If the base graph is very large, we compute the top 20 eigenvalues.
-        # This should overestimate the number we need. Convergence to
-        # TW has std ~C*n**(-2/3), while 20/n eigs has std ~C*n**(-1/2)
-        base_eigs = eigsh(base_graph, k=20, return_eigenvectors=False)
 
-    # The following will be need to make sure that the new eigenvalue generated
-    # is indeed new. Only relevant when not all the base eigs are calculated.
-    base_eig_smallest_pos = np.min([eig for eig in base_eigs if eig > 0])
-    base_eig_largest_neg = np.max([eig for eig in base_eigs if eig < 0])
-    base_eig_smallest_abs = np.min([abs(eig) for eig in base_eigs])
+        # If the base graph is very large, we compute the top k eigenvalues.
+        # This should overestimate the number we need. Convergence to
+        # TW has std ~C*n**(-2/3), while k/n eigs has std ~C_k*n**(-1/2)
+        if base_graph.shape[0] <= 20000:
+            num_base_eigs = 50
+        elif base_graph.shape[0] <= 100000:
+            num_base_eigs = 20
+        else:
+            num_base_eigs = 10
+
+        base_graph = csr_matrix(base_graph)
+        base_eigs = eigsh(base_graph, k=num_base_eigs, return_eigenvectors=False)
+
     # The random_cover function runs much faster if we first turn the base graph
     # into a dok_matrix
-
     base_graph = dok_matrix(base_graph)
 
     output = []
 
+    # base_eig_mag_cutoff is the smallest magnitude of the relevant base eigenvalues
+    # This quantity only matters when we do not compute all of the base eigenvalues.
     if eig_type == "max_positive":
         id_mult = 1
+        base_eig_mag_cutoff = np.min([abs(eig) for eig in base_eigs if eig > 0])
     elif eig_type == "max_negative":
         id_mult = -1
+        base_eig_mag_cutoff = np.min([abs(eig) for eig in base_eigs if eig < 0])
     elif eig_type == "max_magnitude":
         id_mult = 0
+        base_eig_mag_cutoff = np.min([abs(eig) for eig in base_eigs])
     else:
         raise ValueError(
             f"size_type '{eig_type}' is invalid. Must be one of "
@@ -90,9 +97,22 @@ def generate_new_extremal_eigs(
 
     identity_shift = id_mult * int(trivial_eig / 2)
 
-    k = 2
-
-    min_dist = 50
+    # If our number of iterations is smaller, the cost of having to compute
+    # eigenvalues more than once is higher.
+    # Remark: A more faster approach would be to increase num_eigs_to_get by
+    # the number of relevant base_graph eigs larger than the radius of the
+    # universal cover. This function applies to irregular graphs, so we
+    # chose not to split into 2 functions in order to do this for reg graphs
+    if number < 3:
+        num_eigs_to_get = 6
+    elif number < 10:
+        num_eigs_to_get = 5
+    elif number < 20:
+        num_eigs_to_get = 4
+    elif number < 100:
+        num_eigs_to_get = 3
+    else:
+        num_eigs_to_get = 2
 
     for i in range(0, number):
         B = covers.random_cover(
@@ -105,7 +125,7 @@ def generate_new_extremal_eigs(
         found_new_eig = False
 
         while found_new_eig is not True:
-            shifted_eigs = eigsh(B, k=k, return_eigenvectors=False)
+            shifted_eigs = eigsh(B, k=num_eigs_to_get, return_eigenvectors=False)
             eigs = [x - identity_shift for x in shifted_eigs]
 
             #            print([np.min(abs(base_eigs - eig)) for eig in eigs])
@@ -115,10 +135,11 @@ def generate_new_extremal_eigs(
                 # Note: If k is increased for a single graph in the loop, it increases
                 # for all others. With high probability, if k needs to be
                 # larger, it is due to the base graph and not the cover.
-                k = k + 2
+                num_eigs_to_get += 2
             else:
                 # Append the largest magnitude eigenvalues not from the base_graph
-                output.append(sorted(eigs, key=lambda x: abs(x))[-1])
+                lm_new_eig = sorted(eigs, key=lambda x: abs(x))[-1]
+                output.append(lm_new_eig)
                 found_new_eig = True
 
                 # One way a new eigenvalue could fail to be new, is that it is
@@ -128,27 +149,11 @@ def generate_new_extremal_eigs(
                 # eigenvalue is new. The entire function will break if we cannot do
                 # this, as that indicates a fatal error by the author,
                 # as then the program is not computing what was intended.
-                if eig_type == "max_positive":
 
-                    if min_dist > np.max(eigs) - base_eig_smallest_pos:
-                        min_dist = np.max(eigs) - base_eig_smallest_pos
-
-                    if np.max(eigs) < base_eig_smallest_pos:
-                        raise ValueError(
-                            f"Largest New Eigenvalue {np.max(eigs)} smaller than "
-                            f" smallest base eig {base_eig_smallest_pos}"
-                        )
-                elif eig_type == "max_negative":
-                    if np.min(eigs) > base_eig_largest_neg:
-                        raise ValueError(
-                            f"Smallest New Eigenvalue {np.min(eigs)} larger than "
-                            f" largest base eig {base_eig_largest_neg}"
-                        )
-                elif eig_type == "max_magnitude":
-                    if np.max(np.abs(np.array(eigs))) < base_eig_smallest_abs:
-                        raise ValueError(
-                            f"Largest magnitude new Eigenvalue {np.min(eigs)} smaller "
-                            f" than smallest base eig {base_eig_smallest_abs}"
-                        )
-    print(min_dist)
+                if abs(lm_new_eig) < base_eig_mag_cutoff:
+                    raise RuntimeError(
+                        f"Largest New Eigenvalue {lm_new_eig} is smaller than the "
+                        f"smallest magnitude relevant base eig {base_eig_mag_cutoff}."
+                        f"Hard-coded value {num_base_eigs} of num_base_eigs too low."
+                    )
     return output
