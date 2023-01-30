@@ -20,8 +20,8 @@ def script_main(size, deg, number, simple, num_cpus):
 
     pool = multiprocessing.Pool(num_cpus)
 
-    if number > 10 * cpu_count:
-        nbatches = cpu_count * 10
+    if number > 10 * num_cpus:
+        nbatches = num_cpus * 10
         batch_size = int(number / nbatches)
         remaining = number - nbatches * batch_size
         inner_numbers = [batch_size] * nbatches + [remaining]
