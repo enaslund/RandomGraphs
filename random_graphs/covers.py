@@ -68,6 +68,71 @@ def random_cover(*, base_graph, cover_deg, permutation_func, identity_shift):
     return csr_matrix((data, (row_ind, col_ind)), shape=(n, n))
 
 
+def random_cover_matrix_rep(*, base_graph, matrix_func, identity_shift):
+    """Returns a random cover of the base graph, according to the permutation_func given
+
+    Args:
+        base_graph (np.array or csr_matrix): The adjacency matrix of the base graph.
+            This must be a symmetric square matrix. Must be simple with no self loops.
+        matrix_func (None -> np.ndarray): The function returns a random matrix of a
+            specific pre-determined size.
+        identity_shift (float): Shift the resulting adjacency matrix by x*I for some
+            x, where I is the identity matrix. This helps when computing the most
+            negative or the most positive eigenvalues of graphs that where these are
+            similar in magnitude.
+
+    Returns:
+        scipy.sparse.csr_matrix: Size matrix_size*len(base_graph)
+    """
+    if np.max(base_graph) > 1:
+        raise ValueError("Base Graph must be simple.")
+
+    matrix_size = matrix_func().shape[0]
+    n = base_graph.shape[0] * matrix_size
+
+    row_ind = []
+    col_ind = []
+    data = []
+
+    # This turns the matrix A into a sparse list of entries
+    # For covers of extremely large graphs, this is the slowest step
+    if not isinstance(base_graph, dok_matrix):
+        base_graph = dok_matrix(base_graph)
+
+    ones = np.ones(matrix_size).astype(int)
+    arange = np.arange(matrix_size)
+    for (i, j), entry in base_graph.items():
+        if i <= j:
+            continue
+        else:
+            random_matrix = matrix_func()
+            data.append(random_matrix.flatten())
+            data.append(random_matrix.flatten())
+
+            for k in range(0, matrix_size):
+                x_coords = matrix_size * i * ones + arange
+                y_coords = matrix_size * j * ones + k * ones
+                row_ind.append(x_coords)
+                col_ind.append(y_coords)
+
+            for k in range(0, matrix_size):
+                x_coords = matrix_size * i * ones + arange
+                y_coords = matrix_size * j * ones + k * ones
+                row_ind.append(y_coords)
+                col_ind.append(x_coords)
+
+    # Add a multiple of the identity
+    row_ind.append(np.arange(n))
+    col_ind.append(np.arange(n))
+    data.append(identity_shift * np.ones(n))
+
+    row_ind = np.concatenate(row_ind)
+    col_ind = np.concatenate(col_ind)
+    data = np.concatenate(data)
+
+    return csr_matrix((data, (row_ind, col_ind)), shape=(n, n))
+
+
 def random_graph(*, deg, size, identity_shift=0):
     """Generates a random graph from the loop. Graph will not necessarily be simple,
     but will have no self-loops.
