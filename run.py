@@ -25,7 +25,7 @@ args = parser.parse_args()
 if args.num_cpus is None:
     import multiprocessing
 
-    num_cpus = multiprocessing.cpu_count()
+    num_cpus = max(multiprocessing.cpu_count() - 1, 1)
 else:
     num_cpus = args.num_cpus
 
