@@ -5,7 +5,7 @@ from scipy.sparse import dok_matrix
 from . import covers
 
 
-def generate_loop_extremal_eigs(*, deg, size, number, eig_type, simple):
+def generate_loop_extremal_eigs(*, size, deg, number, eig_type, simple):
     output = []
 
     if eig_type == "max_positive":
@@ -37,7 +37,7 @@ def generate_loop_extremal_eigs(*, deg, size, number, eig_type, simple):
         eigs = [x - identity_shift for x in shifted_eigs]
 
         #            print([np.min(abs(base_eigs - eig)) for eig in eigs])
-        eigs = [eig for eig in eigs if abs(eig - deg) > 10 ** (-12)]
+        eigs = [eig for eig in eigs if abs(eig - deg) > 10 ** (-10)]
         if len(eigs) > 0:
             output.append(eigs[0])
             count += 1

@@ -1,53 +1,58 @@
 import numpy as np
 import multiprocessing
 import time
-import sys
 import random_graphs
 import os
 
 
-number_outer = 10
-number_inner = 100
-base_size = 100
-cover_deg = 5
-
-
-def async_func():
+def async_func(
+    base_size,
+    cover_deg,
+    deg,
+    inner_number,
+):
     # Critical line of code so the results of multiprocessing are
     # all identical
     np.random.seed((os.getpid() * int(time.time())) % 123456789)
 
-    base_graph = random_graphs.random_simple_graph(size=base_size, deg=4)
+    base_graph = random_graphs.random_simple_graph(size=base_size, deg=deg)
     return random_graphs.generate_new_extremal_eigs(
         **{
             "base_graph": base_graph,
             "cover_deg": cover_deg,
             "permutation_func": random_graphs.permutations.abelian_cycle,
-            "number": number_outer,
-            "trivial_eig": 4,
+            "number": inner_number,
+            "trivial_eig": deg,
             "eig_type": "max_positive",
         }
     )
 
 
-def func_to_call():
-
-    filename = sys.argv[1]
-
+def script_main(size, deg, cover_deg, number, number_covers, num_cpus):
     start = time.time()
     results = []
 
-    cpu_count = multiprocessing.cpu_count()
-    print(f"CPU Count: {cpu_count}")
-    pool = multiprocessing.Pool(cpu_count)
+    pool = multiprocessing.Pool(num_cpus)
 
-    for i in range(0, number_inner):
-        result = pool.apply_async(async_func)
+    for i in range(0, number):
+        result = pool.apply_async(
+            async_func,
+            kwds={
+                "base_size": size,
+                "cover_deg": cover_deg,
+                "deg": deg,
+                "inner_number": number_covers,
+            },
+        )
         results.append(result)
 
     eigs = []
     for x in results:
         eigs.extend(x.get())
 
-    np.savetxt(filename + ".txt", eigs)
-    print(time.time() - start)
+    filename = (
+        f"abeliancover_V{size}x{cover_deg}_N{number}x{number_covers}_bdeg{deg}.npy"
+    )
+
+    np.save(filename, np.array(eigs))
+    print(f"Filename {filename} time: {np.round(time.time() - start,2)}s")
