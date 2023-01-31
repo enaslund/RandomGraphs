@@ -10,6 +10,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 # methods would consume all the CPUs available without any speedup.
 import scripts.loop_graphs  # noqa: E402
 import scripts.cyclic_covers  # noqa: E402
+import scripts.quaternion_rep  # noqa: E402
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--script-name", type=str)

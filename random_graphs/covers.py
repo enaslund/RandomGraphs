@@ -84,6 +84,7 @@ def random_cover_matrix_rep(*, base_graph, matrix_func, identity_shift):
     Returns:
         scipy.sparse.csr_matrix: Size matrix_size*len(base_graph)
     """
+
     if np.max(base_graph) > 1:
         raise ValueError("Base Graph must be simple.")
 

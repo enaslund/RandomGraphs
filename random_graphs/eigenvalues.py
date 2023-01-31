@@ -49,8 +49,6 @@ def generate_matrix_rep_eigs(*, size, deg, number, matrix_func, eig_type):
     """Returns eigenvalues from generating random graphs of a particular
     size and degree, and replacing ones with random matrices according to
     the matrix_func"""
-    # base_eig_mag_cutoff is the smallest magnitude of the relevant base eigenvalues
-    # This quantity only matters when we do not compute all of the base eigenvalues.
     if eig_type == "max_positive":
         id_mult = 1
     elif eig_type == "max_negative":
@@ -67,9 +65,7 @@ def generate_matrix_rep_eigs(*, size, deg, number, matrix_func, eig_type):
 
     output = []
     for i in range(0, number):
-        base_graph = dok_matrix(
-            covers.random_simple_graph(size=size, deg=deg, identity_shift=0)
-        )
+        base_graph = covers.random_simple_graph(size=size, deg=deg, identity_shift=0)
 
         B = covers.random_cover_matrix_rep(
             base_graph=base_graph,
