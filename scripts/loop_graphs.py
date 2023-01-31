@@ -39,7 +39,7 @@ def script_main(size, deg, number, simple, num_cpus):
     for x in results:
         eigs.extend(x.get())
 
-    file_prefix = "simple" if simple else "basic"
-    filename = file_prefix + f"loop_V{size}_N{number}_deg{deg}.npy"
+    file_prefix = "simple" if simple else "loop_cover"
+    filename = file_prefix + f"_deg{deg}_V{size}_N{number}.npy"
     np.save(filename, np.array(eigs))
     print(f"Filename {filename} time: {np.round(time.time() - start,2)}s")
