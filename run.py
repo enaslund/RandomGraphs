@@ -51,3 +51,15 @@ if __name__ == "__main__":
                     number_covers=args.number_covers,
                     num_cpus=num_cpus,
                 )
+        elif args.script_name == "quaternion_rep":
+            scripts.quaternion_rep.script_main(
+                size=size,
+                deg=args.base_degree,
+                number=args.number,
+                num_cpus=num_cpus,
+            )
+        else:
+            raise ValueError(
+                "args.script_name must be one of "
+                "quaternion_rep, loop_graphs, cyclic_covers"
+            )

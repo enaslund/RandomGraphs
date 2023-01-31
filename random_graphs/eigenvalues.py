@@ -45,6 +45,43 @@ def generate_loop_extremal_eigs(*, size, deg, number, eig_type, simple):
     return output
 
 
+def generate_matrix_rep_eigs(*, size, deg, number, matrix_func, eig_type):
+    """Returns eigenvalues from generating random graphs of a particular
+    size and degree, and replacing ones with random matrices according to
+    the matrix_func"""
+    # base_eig_mag_cutoff is the smallest magnitude of the relevant base eigenvalues
+    # This quantity only matters when we do not compute all of the base eigenvalues.
+    if eig_type == "max_positive":
+        id_mult = 1
+    elif eig_type == "max_negative":
+        id_mult = -1
+    elif eig_type == "max_magnitude":
+        id_mult = 0
+    else:
+        raise ValueError(
+            f"size_type '{eig_type}' is invalid. Must be one of "
+            f"'max_positive', 'max_negative', 'max_magnitude' "
+        )
+
+    identity_shift = id_mult * int(deg / 2)
+
+    output = []
+    for i in range(0, number):
+        base_graph = dok_matrix(
+            covers.random_simple_graph(size=size, deg=deg, identity_shift=0)
+        )
+
+        B = covers.random_cover_matrix_rep(
+            base_graph=base_graph,
+            matrix_func=matrix_func,
+            identity_shift=identity_shift,
+        )
+
+        eig = eigsh(B, k=1, return_eigenvectors=False)[0] - identity_shift
+        output.append(eig)
+    return output
+
+
 def generate_new_extremal_eigs(
     *, base_graph, cover_deg, permutation_func, number, trivial_eig, eig_type
 ):

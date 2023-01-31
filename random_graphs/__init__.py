@@ -7,7 +7,7 @@ from .covers import (
     random_simple_graph,
     random_cover_matrix_rep,
 )
-from .matrix_reps import random_quaternion_matrix
+from .matrix_reps import quaternion_matrix_rep
 
 __all__ = [
     "random_cover",
@@ -18,5 +18,5 @@ __all__ = [
     "generate_new_extremal_eigs",
     "permutations",
     "stats",
-    "random_quaternion_matrix",
+    "quaternion_matrix_rep",
 ]

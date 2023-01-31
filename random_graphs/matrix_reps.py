@@ -1,7 +1,7 @@
 import numpy as _np
 
 
-def random_quaternion_matrix():
+def quaternion_matrix_rep():
     """This function returns on of 8 4x4 matrices corresponding to the
     Real irreducible representation of the Quaternion group"""
     i = _np.array([[0.0, -1, 0, 0], [1, 0, 0, 0], [0, 0, 0, -1], [0, 0, 1, 0]])
