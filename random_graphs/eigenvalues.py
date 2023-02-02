@@ -90,6 +90,7 @@ def generate_new_extremal_eigs(
         else:
             dense_base_graph = base_graph
         base_eigs = np.linalg.eigh(dense_base_graph)[0]
+        base_eig_mag_cutoff = 0
     else:
 
         # If the base graph is very large, we compute the top k eigenvalues.
@@ -103,6 +104,13 @@ def generate_new_extremal_eigs(
         base_graph = csr_matrix(base_graph)
         base_eigs = eigsh(base_graph, k=num_base_eigs, return_eigenvectors=False)
 
+        if eig_type == "max_positive":
+            base_eig_mag_cutoff = np.min([abs(eig) for eig in base_eigs if eig > 0])
+        elif eig_type == "max_negative":
+            base_eig_mag_cutoff = np.min([abs(eig) for eig in base_eigs if eig < 0])
+        elif eig_type == "max_magnitude":
+            base_eig_mag_cutoff = np.min([abs(eig) for eig in base_eigs])
+
     # The random_cover function runs much faster if we first turn the base graph
     # into a dok_matrix
     base_graph = dok_matrix(base_graph)
@@ -113,13 +121,10 @@ def generate_new_extremal_eigs(
     # This quantity only matters when we do not compute all of the base eigenvalues.
     if eig_type == "max_positive":
         id_mult = 1
-        base_eig_mag_cutoff = np.min([abs(eig) for eig in base_eigs if eig > 0])
     elif eig_type == "max_negative":
         id_mult = -1
-        base_eig_mag_cutoff = np.min([abs(eig) for eig in base_eigs if eig < 0])
     elif eig_type == "max_magnitude":
         id_mult = 0
-        base_eig_mag_cutoff = np.min([abs(eig) for eig in base_eigs])
     else:
         raise ValueError(
             f"size_type '{eig_type}' is invalid. Must be one of "
