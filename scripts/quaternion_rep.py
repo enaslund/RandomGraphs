@@ -43,6 +43,6 @@ def script_main(size, deg, number, num_cpus):
     for x in results:
         eigs.extend(x.get())
 
-    filename = f"quaternion_V{size}x4_N{number}_deg{deg}.npy"
+    filename = f"quaternion_deg{deg}_V{size}x4_N{number}.npy"
     np.save(filename, np.array(eigs))
     print(f"Filename {filename} time: {np.round(time.time() - start,2)}s")
