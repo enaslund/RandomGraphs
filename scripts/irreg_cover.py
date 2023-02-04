@@ -16,10 +16,11 @@ def async_func(
     # This generates the complete graph on 4 vertices
     base_graph = np.matrix(
         [
-            [0.0, 1.0, 1.0, 0.0],
-            [1.0, 0.0, 1.0, 1.0],
-            [1.0, 1.0, 0.0, 1.0],
-            [0.0, 1.0, 1.0, 0.0],
+            [0.0, 1.0, 1.0, 1.0, 0.0],
+            [1.0, 0.0, 1.0, 1.0, 1.0],
+            [1.0, 1.0, 0.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0, 0.0, 1.0],
+            [0.0, 1.0, 1.0, 1.0, 0.0],
         ]
     )
     return random_graphs.generate_new_extremal_eigs(
@@ -62,7 +63,7 @@ def script_main(cover_deg, number, num_cpus):
     for x in results:
         eigs.extend(x.get())
 
-    filename = f"k4_minus_edge_cover_V{cover_deg}x4_N{number}.npy"
+    filename = f"k5_minus_edge_cover_V{cover_deg}x5_N{number}.npy"
 
     np.save(filename, np.array(eigs))
     print(f"Filename {filename} time: {np.round(time.time() - start,2)}s")
