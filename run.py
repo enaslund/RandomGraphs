@@ -11,6 +11,8 @@ os.environ["OMP_NUM_THREADS"] = "1"
 import scripts.loop_graphs  # noqa: E402
 import scripts.cyclic_covers  # noqa: E402
 import scripts.quaternion_rep  # noqa: E402
+import scripts.k4_cover  # noqa: E402
+import scripts.irreg_cover  # noqa: E402
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--script-name", type=str)
@@ -33,8 +35,9 @@ else:
 
 if __name__ == "__main__":
     deg = args.base_degree
-    for size in args.base_sizes:
-        if args.script_name == "loop_graphs":
+
+    if args.script_name == "loop_graphs":
+        for size in args.base_sizes:
             scripts.loop_graphs.script_main(
                 size=size,
                 deg=args.base_degree,
@@ -42,7 +45,8 @@ if __name__ == "__main__":
                 simple=args.simple,
                 num_cpus=num_cpus,
             )
-        elif args.script_name == "cyclic_covers":
+    elif args.script_name == "cyclic_covers":
+        for size in args.base_sizes:
             for cover_deg in args.cover_degs:
                 scripts.cyclic_covers.script_main(
                     size=size,
@@ -52,15 +56,31 @@ if __name__ == "__main__":
                     number_covers=args.number_covers,
                     num_cpus=num_cpus,
                 )
-        elif args.script_name == "quaternion_rep":
+    elif args.script_name == "quaternion_rep":
+        for size in args.base_sizes:
             scripts.quaternion_rep.script_main(
                 size=size,
                 deg=args.base_degree,
                 number=args.number,
                 num_cpus=num_cpus,
             )
-        else:
-            raise ValueError(
-                "args.script_name must be one of "
-                "quaternion_rep, loop_graphs, cyclic_covers"
+    elif args.script_name == "k4_cover":
+        for cover_deg in args.cover_degs:
+            scripts.k4_cover.script_main(
+                cover_deg=cover_deg,
+                number=args.number,
+                num_cpus=num_cpus,
             )
+    elif args.script_name == "irreg_cover":
+        for cover_deg in args.cover_degs:
+            scripts.irreg_cover.script_main(
+                cover_deg=cover_deg,
+                number=args.number,
+                num_cpus=num_cpus,
+            )
+    else:
+        raise ValueError(
+            "args.script_name must be one of "
+            "quaternion_rep, loop_graphs, cyclic_covers, "
+            "irreg_cover, k4_cover"
+        )
