@@ -11,7 +11,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 import scripts.loop_graphs  # noqa: E402
 import scripts.cyclic_covers  # noqa: E402
 import scripts.quaternion_rep  # noqa: E402
-import scripts.k4_cover  # noqa: E402
+import scripts.complete_cover  # noqa: E402
 import scripts.irreg_cover  # noqa: E402
 
 parser = argparse.ArgumentParser()
@@ -64,13 +64,15 @@ if __name__ == "__main__":
                 number=args.number,
                 num_cpus=num_cpus,
             )
-    elif args.script_name == "k4_cover":
+    elif args.script_name == "complete_cover":
         for cover_deg in args.cover_degs:
-            scripts.k4_cover.script_main(
-                cover_deg=cover_deg,
-                number=args.number,
-                num_cpus=num_cpus,
-            )
+            for size in args.base_sizes:
+                scripts.complete_cover.script_main(
+                    base_size=size,
+                    cover_deg=cover_deg,
+                    number=args.number,
+                    num_cpus=num_cpus,
+                )
     elif args.script_name == "irreg_cover":
         for cover_deg in args.cover_degs:
             scripts.irreg_cover.script_main(

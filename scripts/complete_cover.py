@@ -6,6 +6,7 @@ import os
 
 
 def async_func(
+    base_size,
     cover_deg,
     inner_number,
 ):
@@ -14,14 +15,7 @@ def async_func(
     np.random.seed((os.getpid() * int(time.time())) % 123456789)
 
     # This generates the complete graph on 4 vertices
-    base_graph = np.matrix(
-        [
-            [0.0, 1.0, 1.0, 1.0],
-            [1.0, 0.0, 1.0, 1.0],
-            [1.0, 1.0, 0.0, 1.0],
-            [1.0, 1.0, 1.0, 0.0],
-        ]
-    )
+    base_graph = np.matrix(np.ones((base_size, base_size)) - np.eye(base_size))
     return random_graphs.generate_new_extremal_eigs(
         **{
             "base_graph": base_graph,
@@ -34,7 +28,7 @@ def async_func(
     )
 
 
-def script_main(cover_deg, number, num_cpus):
+def script_main(base_size, cover_deg, number, num_cpus):
     start = time.time()
     results = []
 
@@ -52,6 +46,7 @@ def script_main(cover_deg, number, num_cpus):
         result = pool.apply_async(
             async_func,
             kwds={
+                "base_size": base_size,
                 "cover_deg": cover_deg,
                 "inner_number": inner_number,
             },
@@ -62,7 +57,7 @@ def script_main(cover_deg, number, num_cpus):
     for x in results:
         eigs.extend(x.get())
 
-    filename = f"k4_cover_V{cover_deg}x4_N{number}.npy"
+    filename = f"complete_cover_V{cover_deg}x{base_size}_N{number}.npy"
 
     np.save(filename, np.array(eigs))
     print(f"Filename {filename} time: {np.round(time.time() - start,2)}s")
